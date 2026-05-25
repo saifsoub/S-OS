@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://s-agentos.local/schemas/agent-registry-record.schema.json",
+  "title": "S/ AgentOS Agent Registry Record",
+  "type": "object",
+  "required": [
+    "agent_code",
+    "agent_type",
+    "purpose"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "agent_code": { "type": "string" },
+    "agent_name": { "type": ["string", "null"] },
+    "agent_type": {
+      "type": "string",
+      "enum": ["gpt", "workflow", "service", "bot", "human_router", "monitor", "researcher", "custom"]
+    },
+    "purpose": { "type": "string" },
+    "responsibilities": { "type": "array", "items": { "type": "string" } },
+    "inputs": { "type": "array" },
+    "outputs": { "type": "array" },
+    "tools_required": { "type": "array" },
+    "memory_required": { "type": "object" },
+    "evaluation_metrics": { "type": "array" },
+    "capabilities": { "type": "array" },
+    "deployment_status": { "type": "string" },
+    "lifecycle_status": {
+      "type": "string",
+      "enum": ["draft", "active", "paused", "retired", "inactive"]
+    },
+    "version": { "type": "string" },
+    "owner": { "type": "string" }
+  }
+}

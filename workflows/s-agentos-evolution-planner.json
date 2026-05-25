@@ -1,0 +1,136 @@
+{
+  "name": "S-AgentOS Kernel v0.1 — Evolution Planner",
+  "nodes": [
+    {
+      "id": "e5921c7c-affd-4b5f-adc3-f96f710aa06f",
+      "name": "Webhook — Evolution Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 300],
+      "parameters": {"httpMethod": "POST", "path": "s-agentos-evolution", "responseMode": "responseNode", "options": {}}
+    },
+    {
+      "id": "6436d4ec-8022-4d15-ac28-bb417ac5f6c0",
+      "name": "Code — Extract & Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300],
+      "parameters": {
+        "jsCode": "// Extract and validate evolution plan fields\nconst incoming = $input.first().json || {};\nconst body = incoming.body || {};\nconst headers = incoming.headers || {};\n\nfunction getHeader(name) {\n  const target = String(name).toLowerCase();\n  for (const [key, value] of Object.entries(headers)) {\n    if (String(key).toLowerCase() === target) {\n      return Array.isArray(value) ? value[0] : value;\n    }\n  }\n  return '';\n}\n\nconst agent_id = body.agent_id;\nconst command_id = body.command_id || null;\nconst detected_gap = body.detected_gap;\nconst proposed_improvement = body.proposed_improvement;\nconst data_needed = body.data_needed || [];\nconst workflow_changes_needed = body.workflow_changes_needed || [];\nconst risk_level = body.risk_level || \"medium\";\nconst rollback_plan = body.rollback_plan || \"\";\nconst metadata = body.metadata || {};\n\nconst authHeader = String(getHeader('authorization') || '');\nconst bearerToken = authHeader.replace(/^Bearer\\s+/i, '').trim();\nconst xAgentOSKey = String(getHeader('x-agentos-key') || '').trim();\n\nconst allowedRisks = [\"low\", \"medium\", \"high\"];\nconst riskValid = allowedRisks.includes(risk_level);\n\nconst expectedKey = process.env.S_AGENTOS_OPERATOR_KEY || process.env.S_AGENTOS_API_TOKEN || '';\nconst providedToken = xAgentOSKey || bearerToken;\nconst authValid = Boolean(expectedKey && providedToken && providedToken === expectedKey);\nconst requiredFieldsPresent = Boolean(agent_id && detected_gap && proposed_improvement);\n\nreturn [{\n  json: {\n    agent_id, command_id, detected_gap, proposed_improvement, data_needed,\n    workflow_changes_needed, risk_level: riskValid ? risk_level : \"medium\",\n    rollback_plan, metadata,\n    x_agentos_key: providedToken ? \"[REDACTED]\" : null,\n    auth_method: xAgentOSKey ? \"x-agentos-key\" : (bearerToken ? \"bearer\" : \"missing\"),\n    authValid, requiredFieldsPresent\n  }\n}];"
+      }
+    },
+    {
+      "id": "3f15c80f-2d83-4693-93d7-c393ed6a07d9",
+      "name": "IF — Auth Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [620, 300],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "conditions": [{"id": "4fd9590a-2a31-4cce-ad8b-8e6178d29064", "leftValue": "={{ $json.authValid }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}], "combinator": "and"}}
+    },
+    {
+      "id": "42ee9fae-2be6-42a1-b12d-690aad63db0e",
+      "name": "Code — Auth Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 520],
+      "parameters": {"jsCode": "return [{ json: { ok: false, route: \"evolution_engine\", error: \"Unauthorized\", message: \"Invalid or missing X-AgentOS-Key header\", statusCode: 401 } }];"}
+    },
+    {
+      "id": "b8e275f2-c892-48c6-bc9a-d69b5276f149",
+      "name": "Respond to Webhook — Auth Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [840, 520],
+      "parameters": {"statusCode": 401, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "766b8220-0b85-4502-94da-a21fc67f57bb",
+      "name": "IF — Required Fields?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [840, 300],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "conditions": [{"id": "7616b0d5-5a88-4b05-bd8b-b13a00f61f08", "leftValue": "={{ $json.requiredFieldsPresent }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}], "combinator": "and"}}
+    },
+    {
+      "id": "1d5fb761-31ff-400b-8164-123d3f4affa7",
+      "name": "Code — Validation Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 100],
+      "parameters": {"jsCode": "return [{ json: { ok: false, route: \"evolution_engine\", error: \"Validation error\", message: \"agent_id, detected_gap, and proposed_improvement are required\", statusCode: 400 } }];"}
+    },
+    {
+      "id": "42a36757-3092-465a-bfd1-ad07120ee85e",
+      "name": "Respond to Webhook — Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1060, 100],
+      "parameters": {"statusCode": 400, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "3f4eb0d6-9c76-4143-ae00-8a0af5097600",
+      "name": "Code — Build Evolution Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1060, 300],
+      "parameters": {"jsCode": "const input = $input.first().json;\n\nconst plan = {\n  agent_id: input.agent_id,\n  command_id: input.command_id,\n  detected_gap: input.detected_gap,\n  proposed_improvement: input.proposed_improvement,\n  data_needed: input.data_needed,\n  workflow_changes_needed: input.workflow_changes_needed,\n  risk_level: input.risk_level,\n  rollback_plan: input.rollback_plan,\n  approval_status: \"pending\",\n  status: \"draft\",\n  metadata: input.metadata\n};\n\nreturn [{ json: plan }];"}
+    },
+    {
+      "id": "d158ee15-dead-4d20-9193-b2aa116e69fa",
+      "name": "Supabase — Store Evolution Plan",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1280, 300],
+      "credentials": {"supabaseApi": {"name": "Supabase API"}},
+      "parameters": {
+        "operation": "insert",
+        "tableId": "evolution_plans",
+        "authenticate": "serviceRole",
+        "returnData": "representing",
+        "fieldsUi": {"fieldValues": [
+          {"fieldId": "agent_id", "fieldValue": "={{ $json.agent_id }}"},
+          {"fieldId": "command_id", "fieldValue": "={{ $json.command_id }}"},
+          {"fieldId": "detected_gap", "fieldValue": "={{ $json.detected_gap }}"},
+          {"fieldId": "proposed_improvement", "fieldValue": "={{ $json.proposed_improvement }}"},
+          {"fieldId": "data_needed", "fieldValue": "={{ $json.data_needed }}"},
+          {"fieldId": "workflow_changes_needed", "fieldValue": "={{ $json.workflow_changes_needed }}"},
+          {"fieldId": "risk_level", "fieldValue": "={{ $json.risk_level }}"},
+          {"fieldId": "rollback_plan", "fieldValue": "={{ $json.rollback_plan }}"},
+          {"fieldId": "approval_status", "fieldValue": "={{ $json.approval_status }}"},
+          {"fieldId": "status", "fieldValue": "={{ $json.status }}"},
+          {"fieldId": "metadata", "fieldValue": "={{ $json.metadata }}"}
+        ]}
+      }
+    },
+    {
+      "id": "366facca-2420-439c-8001-707e2f2c92c3",
+      "name": "Code — Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300],
+      "parameters": {"jsCode": "const result = $input.first().json;\nconst plan_id = result.id || \"unknown\";\nconst agent_id = result.agent_id || \"unknown\";\n\nreturn [{ json: {\n  ok: true,\n  route: \"evolution_engine\",\n  plan_id: plan_id,\n  agent_id: agent_id,\n  approval_status: \"pending\",\n  status: \"draft\",\n  evolution_plan: {\n    detected_gap: result.detected_gap,\n    proposed_improvement: result.proposed_improvement,\n    data_needed: result.data_needed || [],\n    workflow_changes_needed: result.workflow_changes_needed || [],\n    risk_level: result.risk_level,\n    rollback_plan: result.rollback_plan,\n    human_approval_required: true\n  }\n} }];"}
+    },
+    {
+      "id": "155e0b65-e8e8-4bd9-8e40-d72d243d49bd",
+      "name": "Respond to Webhook — Evolution Plan",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1720, 300],
+      "parameters": {"statusCode": 200, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    }
+  ],
+  "connections": {
+    "Webhook — Evolution Entry": {"main": [[{"node": "Code — Extract & Validate", "type": "main", "index": 0}]]},
+    "Code — Extract & Validate": {"main": [[{"node": "IF — Auth Valid?", "type": "main", "index": 0}]]},
+    "IF — Auth Valid?": {"main": [[{"node": "IF — Required Fields?", "type": "main", "index": 0}], [{"node": "Code — Auth Error", "type": "main", "index": 0}]]},
+    "Code — Auth Error": {"main": [[{"node": "Respond to Webhook — Auth Error", "type": "main", "index": 0}]]},
+    "IF — Required Fields?": {"main": [[{"node": "Code — Build Evolution Plan", "type": "main", "index": 0}], [{"node": "Code — Validation Error", "type": "main", "index": 0}]]},
+    "Code — Validation Error": {"main": [[{"node": "Respond to Webhook — Validation Error", "type": "main", "index": 0}]]},
+    "Code — Build Evolution Plan": {"main": [[{"node": "Supabase — Store Evolution Plan", "type": "main", "index": 0}]]},
+    "Supabase — Store Evolution Plan": {"main": [[{"node": "Code — Build Response", "type": "main", "index": 0}]]},
+    "Code — Build Response": {"main": [[{"node": "Respond to Webhook — Evolution Plan", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"},
+  "staticData": null,
+  "tags": ["agentos", "kernel", "evolution", "service"]
+}

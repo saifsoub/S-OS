@@ -1,0 +1,140 @@
+{
+  "name": "S-AgentOS Kernel v0.1 — Telemetry Logger",
+  "nodes": [
+    {
+      "id": "7ef203bd-c551-4fc7-b084-a85da084eb1d",
+      "name": "Webhook — Telemetry Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "s-agentos-telemetry",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "38a9cf8c-074f-4d90-bf4a-df8f5021cd8f",
+      "name": "Code — Extract & Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300],
+      "parameters": {
+        "jsCode": "// Extract and validate telemetry fields\nconst incoming = $input.first().json || {};\nconst body = incoming.body || {};\nconst headers = incoming.headers || {};\n\nfunction getHeader(name) {\n  const target = String(name).toLowerCase();\n  for (const [key, value] of Object.entries(headers)) {\n    if (String(key).toLowerCase() === target) {\n      return Array.isArray(value) ? value[0] : value;\n    }\n  }\n  return '';\n}\n\nconst event_type = body.event_type;\nconst source = body.source || \"unknown\";\nconst severity = body.severity || \"info\";\nconst agent_id = body.agent_id || null;\nconst command_id = body.command_id || null;\nconst payload = body.payload || {};\nconst metadata = body.metadata || {};\n\nconst authHeader = String(getHeader('authorization') || '');\nconst bearerToken = authHeader.replace(/^Bearer\\s+/i, '').trim();\nconst xAgentOSKey = String(getHeader('x-agentos-key') || '').trim();\n\nconst allowedSeverities = [\"critical\", \"error\", \"warning\", \"info\", \"debug\"];\nconst severityValid = allowedSeverities.includes(severity);\n\nconst expectedKey = process.env.S_AGENTOS_OPERATOR_KEY || process.env.S_AGENTOS_API_TOKEN || '';\nconst providedToken = xAgentOSKey || bearerToken;\nconst authValid = Boolean(expectedKey && providedToken && providedToken === expectedKey);\nconst eventTypePresent = Boolean(event_type);\n\nreturn [{\n  json: {\n    event_type,\n    source,\n    severity: severityValid ? severity : \"info\",\n    agent_id,\n    command_id,\n    payload,\n    metadata,\n    x_agentos_key: providedToken ? \"[REDACTED]\" : null,\n    auth_method: xAgentOSKey ? \"x-agentos-key\" : (bearerToken ? \"bearer\" : \"missing\"),\n    authValid,\n    eventTypePresent\n  }\n}];"
+      }
+    },
+    {
+      "id": "a720e82c-de86-441f-a8c6-281438fce582",
+      "name": "IF — Auth Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [620, 300],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [{"id": "72907f5a-ddfc-4d63-b8e8-84337c5d951c", "leftValue": "={{ $json.authValid }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "cfb929d0-c225-4d74-a3aa-b905caf4a849",
+      "name": "Code — Auth Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 520],
+      "parameters": {"jsCode": "return [{ json: { ok: false, route: \"telemetry\", error: \"Unauthorized\", message: \"Invalid or missing X-AgentOS-Key header\", statusCode: 401 } }];"}
+    },
+    {
+      "id": "b67a1c95-93a6-44cd-a0fc-9918ea740c6e",
+      "name": "Respond to Webhook — Auth Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [840, 520],
+      "parameters": {"statusCode": 401, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "7e13a81a-25af-4479-8d61-4c851e0c7e35",
+      "name": "IF — event_type present?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [840, 300],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [{"id": "e907d285-d5eb-4440-a713-df4fe2ea8fdf", "leftValue": "={{ $json.eventTypePresent }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "fc111414-c351-4172-994b-a5d9841b2b6c",
+      "name": "Code — Validation Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 100],
+      "parameters": {"jsCode": "return [{ json: { ok: false, route: \"telemetry\", error: \"Validation error\", message: \"event_type is required\", statusCode: 400 } }];"}
+    },
+    {
+      "id": "51c27103-2cde-4655-9e2a-080b3b7db4a6",
+      "name": "Respond to Webhook — Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1060, 100],
+      "parameters": {"statusCode": 400, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "bfde4e71-4415-4979-864f-bab3c179da85",
+      "name": "Supabase — Insert Telemetry",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1060, 300],
+      "credentials": {"supabaseApi": {"name": "Supabase API"}},
+      "parameters": {
+        "operation": "insert",
+        "tableId": "os_events",
+        "authenticate": "serviceRole",
+        "returnData": "representing",
+        "fieldsUi": {"fieldValues": [
+          {"fieldId": "event_type", "fieldValue": "={{ $json.event_type }}"},
+          {"fieldId": "source", "fieldValue": "={{ $json.source }}"},
+          {"fieldId": "severity", "fieldValue": "={{ $json.severity }}"},
+          {"fieldId": "agent_id", "fieldValue": "={{ $json.agent_id }}"},
+          {"fieldId": "command_id", "fieldValue": "={{ $json.command_id }}"},
+          {"fieldId": "payload", "fieldValue": "={{ $json.payload }}"},
+          {"fieldId": "metadata", "fieldValue": "={{ $json.metadata }}"}
+        ]}
+      }
+    },
+    {
+      "id": "e4826ffa-bf9a-4b97-b2de-64f3c6ddda3c",
+      "name": "Code — Build Accepted Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1280, 300],
+      "parameters": {"jsCode": "const result = $input.first().json;\nconst event_id = result.id || null;\n\nreturn [{ json: { ok: true, route: \"telemetry\", telemetry_status: \"accepted\", event_id: event_id } }];"}
+    },
+    {
+      "id": "7459c840-1d0f-4bfc-b9bb-c486fd64d9fb",
+      "name": "Respond to Webhook — Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1500, 300],
+      "parameters": {"statusCode": 200, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    }
+  ],
+  "connections": {
+    "Webhook — Telemetry Entry": {"main": [[{"node": "Code — Extract & Validate", "type": "main", "index": 0}]]},
+    "Code — Extract & Validate": {"main": [[{"node": "IF — Auth Valid?", "type": "main", "index": 0}]]},
+    "IF — Auth Valid?": {"main": [[{"node": "IF — event_type present?", "type": "main", "index": 0}], [{"node": "Code — Auth Error", "type": "main", "index": 0}]]},
+    "Code — Auth Error": {"main": [[{"node": "Respond to Webhook — Auth Error", "type": "main", "index": 0}]]},
+    "IF — event_type present?": {"main": [[{"node": "Supabase — Insert Telemetry", "type": "main", "index": 0}], [{"node": "Code — Validation Error", "type": "main", "index": 0}]]},
+    "Code — Validation Error": {"main": [[{"node": "Respond to Webhook — Validation Error", "type": "main", "index": 0}]]},
+    "Supabase — Insert Telemetry": {"main": [[{"node": "Code — Build Accepted Response", "type": "main", "index": 0}]]},
+    "Code — Build Accepted Response": {"main": [[{"node": "Respond to Webhook — Accepted", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"},
+  "staticData": null,
+  "tags": ["agentos", "kernel", "telemetry", "service"]
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://s-agentos.local/schemas/evolution-plan.schema.json",
+  "title": "S/ AgentOS Evolution Plan",
+  "type": "object",
+  "required": ["agent_id", "detected_gap", "proposed_improvement"],
+  "additionalProperties": false,
+  "properties": {
+    "agent_id": { "type": "string" },
+    "command_id": { "type": ["string", "null"] },
+    "detected_gap": { "type": "string" },
+    "proposed_improvement": { "type": "string" },
+    "data_needed": { "type": "array", "items": { "type": "string" } },
+    "workflow_changes_needed": { "type": "array", "items": { "type": "string" } },
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+    "rollback_plan": { "type": "string" },
+    "metadata": { "type": "object", "additionalProperties": true }
+  }
+}

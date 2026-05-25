@@ -1,0 +1,258 @@
+{
+  "name": "S-AgentOS Kernel v0.1 — Agent Registry Service",
+  "nodes": [
+    {
+      "id": "7d4b5507-c3f1-4bf8-8443-e32d3794e85a",
+      "name": "Webhook — Registry Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 300],
+      "parameters": {"httpMethod": "POST", "path": "s-agentos-registry", "responseMode": "responseNode", "options": {}}
+    },
+    {
+      "id": "b95f4d79-7026-48c0-8bb1-1e2b20828c1e",
+      "name": "Code — Extract Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300],
+      "parameters": {
+        "jsCode": "// Extract and validate request fields\nconst incoming = $input.first().json || {};\nconst body = incoming.body || {};\nconst headers = incoming.headers || {};\n\nfunction getHeader(name) {\n  const target = String(name).toLowerCase();\n  for (const [key, value] of Object.entries(headers)) {\n    if (String(key).toLowerCase() === target) {\n      return Array.isArray(value) ? value[0] : value;\n    }\n  }\n  return '';\n}\n\nconst operation = body.operation;\nconst agent_data = body.agent_data || {};\nconst agent_id = body.agent_id || null;\nconst new_status = body.new_status || null;\n\nconst authHeader = String(getHeader('authorization') || '');\nconst bearerToken = authHeader.replace(/^Bearer\\s+/i, '').trim();\nconst xAgentOSKey = String(getHeader('x-agentos-key') || '').trim();\n\nconst expectedKey = process.env.S_AGENTOS_OPERATOR_KEY || process.env.S_AGENTOS_API_TOKEN || '';\nconst providedToken = xAgentOSKey || bearerToken;\nconst authValid = Boolean(expectedKey && providedToken && providedToken === expectedKey);\n\nconst allowedOps = [\"create\", \"list\", \"get\", \"update_status\"];\nconst operationValid = allowedOps.includes(operation);\n\nreturn [{\n  json: {\n    operation, agent_data, agent_id, new_status,\n    x_agentos_key: providedToken ? \"[REDACTED]\" : null,\n    auth_method: xAgentOSKey ? \"x-agentos-key\" : (bearerToken ? \"bearer\" : \"missing\"),\n    authValid, operationValid\n  }\n}];"
+      }
+    },
+    {
+      "id": "66d4f0c9-3a92-4eef-b398-d88111bc2b98",
+      "name": "IF — Auth Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [620, 300],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "conditions": [{"id": "f8a4422d-c9d0-4295-b86b-1fd02a9a315e", "leftValue": "={{ $json.authValid }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}], "combinator": "and"}}
+    },
+    {
+      "id": "29f78b26-21a1-4c58-8977-1e4feacaae71",
+      "name": "Code — Auth Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 520],
+      "parameters": {"jsCode": "return [{ json: { ok: false, route: \"agent_registry\", error: \"Unauthorized\", message: \"Invalid or missing X-AgentOS-Key header\", statusCode: 401 } }];"}
+    },
+    {
+      "id": "2034347e-1c76-4190-ad30-8b204197b7e1",
+      "name": "Respond to Webhook — Auth Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [840, 520],
+      "parameters": {"statusCode": 401, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "ec95ccef-c4f7-4b00-96d4-a1649f5f94b2",
+      "name": "IF — Operation Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [840, 300],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "conditions": [{"id": "b7eed5e8-967a-4a98-b106-97541da302aa", "leftValue": "={{ $json.operationValid }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}], "combinator": "and"}}
+    },
+    {
+      "id": "876c3992-396c-4089-a465-f9024fe06e6e",
+      "name": "Code — Invalid Operation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 100],
+      "parameters": {"jsCode": "return [{ json: { ok: false, route: \"agent_registry\", error: \"Invalid operation\", message: \"Operation must be one of: create, list, get, update_status\", received_operation: $input.first().json.operation, statusCode: 400 } }];"}
+    },
+    {
+      "id": "5def2f86-2c92-4277-b36e-74927bbf61a6",
+      "name": "Respond to Webhook — Invalid Op",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1060, 100],
+      "parameters": {"statusCode": 400, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "e9d0f49b-82e0-4f0b-954b-a9e59b5938eb",
+      "name": "Switch — Route by Operation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [1060, 300],
+      "parameters": {
+        "rules": {"rules": [{"value": "create", "output": 0}, {"value": "list", "output": 1}, {"value": "get", "output": 2}, {"value": "update_status", "output": 3}]},
+        "dataType": "string",
+        "value": "={{ $json.operation }}"
+      }
+    },
+    {
+      "id": "42146bdf-5f16-497d-afc9-eff6625febfc",
+      "name": "Code — Prepare Agent Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1280, -80],
+      "parameters": {"jsCode": "const input = $input.first().json;\nconst agent_data = input.agent_data || {};\n\nconst hex = Math.random().toString(36).substring(2, 8).toUpperCase();\nconst agent_code = \"AGT-\" + hex;\n\nconst record = {\n  agent_code,\n  agent_name: agent_data.agent_name || \"Unnamed Agent\",\n  agent_type: agent_data.agent_type || \"general\",\n  purpose: agent_data.purpose || \"\",\n  responsibilities: agent_data.responsibilities || [],\n  inputs: agent_data.inputs || [],\n  outputs: agent_data.outputs || [],\n  tools_required: agent_data.tools_required || [],\n  memory_required: agent_data.memory_required || [],\n  evaluation_metrics: agent_data.evaluation_metrics || [],\n  capabilities: agent_data.capabilities || [],\n  deployment_status: \"draft\",\n  lifecycle_status: \"active\",\n  version: \"0.1\",\n  owner: agent_data.owner || \"operator\",\n  metadata: agent_data.metadata || {}\n};\n\nreturn [{ json: record }];"}
+    },
+    {
+      "id": "d01b18be-c5ba-4920-b633-203093f67592",
+      "name": "Supabase — Insert Agent",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1500, -80],
+      "credentials": {"supabaseApi": {"name": "Supabase API"}},
+      "parameters": {
+        "operation": "insert",
+        "tableId": "agent_registry",
+        "authenticate": "serviceRole",
+        "returnData": "representing",
+        "fieldsUi": {"fieldValues": [
+          {"fieldId": "agent_code", "fieldValue": "={{ $json.agent_code }}"},
+          {"fieldId": "agent_name", "fieldValue": "={{ $json.agent_name }}"},
+          {"fieldId": "agent_type", "fieldValue": "={{ $json.agent_type }}"},
+          {"fieldId": "purpose", "fieldValue": "={{ $json.purpose }}"},
+          {"fieldId": "responsibilities", "fieldValue": "={{ $json.responsibilities }}"},
+          {"fieldId": "inputs", "fieldValue": "={{ $json.inputs }}"},
+          {"fieldId": "outputs", "fieldValue": "={{ $json.outputs }}"},
+          {"fieldId": "tools_required", "fieldValue": "={{ $json.tools_required }}"},
+          {"fieldId": "memory_required", "fieldValue": "={{ $json.memory_required }}"},
+          {"fieldId": "evaluation_metrics", "fieldValue": "={{ $json.evaluation_metrics }}"},
+          {"fieldId": "capabilities", "fieldValue": "={{ $json.capabilities }}"},
+          {"fieldId": "deployment_status", "fieldValue": "={{ $json.deployment_status }}"},
+          {"fieldId": "lifecycle_status", "fieldValue": "={{ $json.lifecycle_status }}"},
+          {"fieldId": "version", "fieldValue": "={{ $json.version }}"},
+          {"fieldId": "owner", "fieldValue": "={{ $json.owner }}"},
+          {"fieldId": "metadata", "fieldValue": "={{ $json.metadata }}"}
+        ]}
+      }
+    },
+    {
+      "id": "3a970994-334a-4f82-ae96-c6f45dbd57ba",
+      "name": "Code — Build Create Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1720, -80],
+      "parameters": {"jsCode": "const result = $input.first().json;\nreturn [{ json: { ok: true, route: \"agent_registry\", operation: \"create\", agent_id: result.id || result.agent_code || \"unknown\", agent_code: result.agent_code || \"unknown\", status: \"created\" } }];"}
+    },
+    {
+      "id": "ad11eb25-ca44-4c50-8450-2c35e5451b2a",
+      "name": "Respond to Webhook — Create",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1940, -80],
+      "parameters": {"statusCode": 200, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "df057fcb-578c-441c-b9a7-27071ebabb70",
+      "name": "Supabase — Query All Agents",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1280, 160],
+      "credentials": {"supabaseApi": {"name": "Supabase API"}},
+      "parameters": {"operation": "select", "tableId": "agent_registry", "returnData": "representing", "authenticate": "serviceRole"}
+    },
+    {
+      "id": "4e646daf-6405-42a3-9e86-bb47bfed045e",
+      "name": "Code — Build List Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 160],
+      "parameters": {"jsCode": "const items = $input.all();\nconst agents = items.map(item => item.json);\nreturn [{ json: { ok: true, route: \"agent_registry\", operation: \"list\", agents, count: agents.length } }];"}
+    },
+    {
+      "id": "dd858dd2-28b6-44f6-9ccc-7c16c87cdb79",
+      "name": "Respond to Webhook — List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1720, 160],
+      "parameters": {"statusCode": 200, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "7becf12a-f7de-4fcd-a683-ed28d67f4b1f",
+      "name": "Supabase — Get Agent by ID",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1280, 400],
+      "credentials": {"supabaseApi": {"name": "Supabase API"}},
+      "parameters": {"operation": "select", "tableId": "agent_registry", "returnData": "representing", "authenticate": "serviceRole", "filters": {"conditions": [{"key": "id", "condition": "eq", "value": "={{ $json.agent_id }}"}]}}
+    },
+    {
+      "id": "e19d0fd8-1c9a-4a3c-ad52-f416525cc1c5",
+      "name": "Code — Build Get Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 400],
+      "parameters": {"jsCode": "const items = $input.all();\nconst agent = items.length > 0 ? items[0].json : null;\nreturn [{ json: { ok: true, route: \"agent_registry\", operation: \"get\", agent } }];"}
+    },
+    {
+      "id": "7eea27eb-6190-47ce-8c89-4632023bd0a9",
+      "name": "Respond to Webhook — Get",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1720, 400],
+      "parameters": {"statusCode": 200, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "b37997ec-a418-4ac9-a08f-aa90f1355aa5",
+      "name": "Supabase — Update Status",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1280, 640],
+      "credentials": {"supabaseApi": {"name": "Supabase API"}},
+      "parameters": {
+        "operation": "update",
+        "tableId": "agent_registry",
+        "authenticate": "serviceRole",
+        "filters": {"conditions": [{"key": "id", "condition": "eq", "value": "={{ $json.agent_id }}"}]},
+        "fieldsUi": {"fieldValues": [{"fieldId": "deployment_status", "fieldValue": "={{ $json.new_status }}"}]}
+      }
+    },
+    {
+      "id": "711cf25b-a372-4fd7-b0e9-1fc57c2f07cc",
+      "name": "Code — Build Update Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 640],
+      "parameters": {"jsCode": "const input = $input.first().json;\nreturn [{ json: { ok: true, route: \"agent_registry\", operation: \"update_status\", agent_id: input.agent_id || \"unknown\", new_status: input.new_status || \"unknown\", updated: true } }];"}
+    },
+    {
+      "id": "94c58375-f06a-4089-a83e-ec03c19d75b5",
+      "name": "Respond to Webhook — Update",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1720, 640],
+      "parameters": {"statusCode": 200, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    },
+    {
+      "id": "3527f4e3-3dad-4a3d-86e8-61920af0dc84",
+      "name": "Code — Unsupported Operation Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1280, 860],
+      "parameters": {"jsCode": "return [{ json: { ok: false, route: \"agent_registry\", error: \"Unsupported operation\", message: \"The requested operation is not supported\", statusCode: 400 } }];"}
+    },
+    {
+      "id": "c95df3c1-da32-4b38-9d45-f2ca93e2b625",
+      "name": "Respond to Webhook — Unsupported",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1500, 860],
+      "parameters": {"statusCode": 400, "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}}}
+    }
+  ],
+  "connections": {
+    "Webhook — Registry Entry": {"main": [[{"node": "Code — Extract Request", "type": "main", "index": 0}]]},
+    "Code — Extract Request": {"main": [[{"node": "IF — Auth Valid?", "type": "main", "index": 0}]]},
+    "IF — Auth Valid?": {"main": [[{"node": "IF — Operation Valid?", "type": "main", "index": 0}], [{"node": "Code — Auth Error", "type": "main", "index": 0}]]},
+    "Code — Auth Error": {"main": [[{"node": "Respond to Webhook — Auth Error", "type": "main", "index": 0}]]},
+    "IF — Operation Valid?": {"main": [[{"node": "Switch — Route by Operation", "type": "main", "index": 0}], [{"node": "Code — Invalid Operation", "type": "main", "index": 0}]]},
+    "Code — Invalid Operation": {"main": [[{"node": "Respond to Webhook — Invalid Op", "type": "main", "index": 0}]]},
+    "Switch — Route by Operation": {"main": [[{"node": "Code — Prepare Agent Record", "type": "main", "index": 0}], [{"node": "Supabase — Query All Agents", "type": "main", "index": 0}], [{"node": "Supabase — Get Agent by ID", "type": "main", "index": 0}], [{"node": "Supabase — Update Status", "type": "main", "index": 0}], [{"node": "Code — Unsupported Operation Error", "type": "main", "index": 0}]]},
+    "Code — Prepare Agent Record": {"main": [[{"node": "Supabase — Insert Agent", "type": "main", "index": 0}]]},
+    "Supabase — Insert Agent": {"main": [[{"node": "Code — Build Create Response", "type": "main", "index": 0}]]},
+    "Code — Build Create Response": {"main": [[{"node": "Respond to Webhook — Create", "type": "main", "index": 0}]]},
+    "Supabase — Query All Agents": {"main": [[{"node": "Code — Build List Response", "type": "main", "index": 0}]]},
+    "Code — Build List Response": {"main": [[{"node": "Respond to Webhook — List", "type": "main", "index": 0}]]},
+    "Supabase — Get Agent by ID": {"main": [[{"node": "Code — Build Get Response", "type": "main", "index": 0}]]},
+    "Code — Build Get Response": {"main": [[{"node": "Respond to Webhook — Get", "type": "main", "index": 0}]]},
+    "Supabase — Update Status": {"main": [[{"node": "Code — Build Update Response", "type": "main", "index": 0}]]},
+    "Code — Build Update Response": {"main": [[{"node": "Respond to Webhook — Update", "type": "main", "index": 0}]]},
+    "Code — Unsupported Operation Error": {"main": [[{"node": "Respond to Webhook — Unsupported", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"},
+  "staticData": null,
+  "tags": ["agentos", "kernel", "registry", "service"]
+}

@@ -1,0 +1,300 @@
+openapi: 3.1.0
+info:
+  title: S/ AgentOS Kernel Command API
+  version: 0.2.0
+  description: >
+    Universal agentic operating system kernel. Provider-agnostic: works with any
+    LLM (OpenAI, Anthropic, Groq, Ollama, or custom). Multi-channel output:
+    Telegram, Slack, webhook, Supabase. Safe by default — all actions start in
+    draft/dry_run mode. Live writes require approval_status=approved.
+
+    Authentication: every request must include X-AgentOS-Key header or
+    Authorization: Bearer token matching S_AGENTOS_OPERATOR_KEY.
+servers:
+  - url: https://YOUR_N8N_PUBLIC_DOMAIN
+    description: Replace with your n8n base URL (no trailing slash).
+
+security:
+  - AgentOSOperatorKey: []
+  - BearerAuth: []
+
+paths:
+  /webhook/s-agentos-command:
+    post:
+      operationId: sendAgentOSCommand
+      summary: Send a command to the S/ AgentOS kernel
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentOSCommand"
+            examples:
+              healthCheck:
+                summary: Health check
+                value:
+                  action: health_check
+                  objective: Check S/ AgentOS kernel status.
+                  requested_by: operator
+                  priority: low
+                  run_mode: dry_run
+                  approval_status: not_required
+              createAgent:
+                summary: Draft a new agent (safe)
+                value:
+                  action: create_agent
+                  objective: Create a Telegram revenue operations agent.
+                  requested_by: operator
+                  priority: high
+                  run_mode: draft
+                  approval_status: not_required
+                  context:
+                    domain: Telegram monetization
+                    model_preference:
+                      provider: auto
+                      tier: fast
+                      fallback: [anthropic, groq, openai]
+                    output_channels: [telegram, supabase]
+      responses:
+        "200":
+          description: Command processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentOSResponse"
+        "400":
+          description: Validation error or unsupported action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentOSError"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentOSError"
+
+  /webhook/s-agentos-registry:
+    post:
+      operationId: manageAgentRegistry
+      summary: Direct agent registry CRUD endpoint
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistryOperation"
+      responses:
+        "200":
+          description: Registry operation result
+
+  /webhook/s-agentos-telemetry:
+    post:
+      operationId: logTelemetryEvent
+      summary: Direct telemetry ingestion endpoint
+      x-openai-isConsequential: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelemetryEvent"
+      responses:
+        "200":
+          description: Event accepted
+
+  /webhook/s-agentos-evolution:
+    post:
+      operationId: createEvolutionPlan
+      summary: Direct evolution planning endpoint
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvolutionPlanRequest"
+      responses:
+        "200":
+          description: Evolution plan created (pending approval)
+
+components:
+  securitySchemes:
+    AgentOSOperatorKey:
+      type: apiKey
+      in: header
+      name: X-AgentOS-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    AgentOSCommand:
+      type: object
+      required: [action, objective]
+      additionalProperties: false
+      properties:
+        command_id:
+          type: string
+          pattern: "^cmd_[A-Za-z0-9_\\-]+$"
+        trace_id:
+          type: string
+        idempotency_key:
+          type: ["string", "null"]
+          maxLength: 128
+        action:
+          type: string
+          enum: [health_check, create_agent, execute_task, evaluate_agent, evolve_agent, registry_sync, telemetry_log, list_agents, get_agent, update_agent_status]
+        objective:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        requested_by:
+          type: string
+          default: operator
+        priority:
+          type: string
+          enum: [low, normal, medium, high, urgent, critical]
+          default: normal
+        run_mode:
+          type: string
+          enum: [draft, dry_run, read_only, live]
+          default: draft
+        approval_status:
+          type: string
+          enum: [not_required, pending, approved, rejected, expired]
+          default: not_required
+        agent_id:
+          type: ["string", "null"]
+          default: null
+        context:
+          type: object
+          additionalProperties: true
+          default: {}
+        metadata:
+          type: object
+          additionalProperties: true
+          default: {}
+
+    RegistryOperation:
+      type: object
+      required: [operation]
+      additionalProperties: false
+      properties:
+        operation:
+          type: string
+          enum: [create, list, get, update_status]
+        agent_id:
+          type: ["string", "null"]
+        new_status:
+          type: ["string", "null"]
+        agent_data:
+          type: object
+          additionalProperties: true
+          default: {}
+
+    TelemetryEvent:
+      type: object
+      required: [event_type]
+      additionalProperties: false
+      properties:
+        event_type:
+          type: string
+        source:
+          type: string
+          default: unknown
+        severity:
+          type: string
+          enum: [critical, error, warning, info, debug]
+          default: info
+        agent_id:
+          type: ["string", "null"]
+        command_id:
+          type: ["string", "null"]
+        payload:
+          type: object
+          additionalProperties: true
+          default: {}
+        metadata:
+          type: object
+          additionalProperties: true
+          default: {}
+
+    EvolutionPlanRequest:
+      type: object
+      required: [agent_id, detected_gap, proposed_improvement]
+      additionalProperties: false
+      properties:
+        agent_id:
+          type: string
+        command_id:
+          type: ["string", "null"]
+        detected_gap:
+          type: string
+        proposed_improvement:
+          type: string
+        data_needed:
+          type: array
+          items:
+            type: string
+          default: []
+        workflow_changes_needed:
+          type: array
+          items:
+            type: string
+          default: []
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+        rollback_plan:
+          type: string
+          default: ""
+        metadata:
+          type: object
+          additionalProperties: true
+          default: {}
+
+    AgentOSResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          const: true
+        kernel_version:
+          type: string
+        trace_id:
+          type: string
+        command_id:
+          type: string
+        action:
+          type: string
+        run_mode:
+          type: string
+        approval_status:
+          type: string
+        route:
+          type: string
+        result:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    AgentOSError:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: integer
+        command_id:
+          type: ["string", "null"]
+      additionalProperties: true

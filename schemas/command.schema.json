@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://s-agentos.kernel/schemas/command.v0.2.0.schema.json",
+  "title": "S/ AgentOS Command Envelope v0.2.0",
+  "description": "Canonical command envelope for all S/ AgentOS kernel operations.",
+  "type": "object",
+  "required": ["action", "objective"],
+  "additionalProperties": false,
+  "properties": {
+    "command_id": {
+      "type": "string",
+      "description": "Client-provided or gateway-generated command identifier.",
+      "pattern": "^cmd_[A-Za-z0-9_\\-]+$"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Distributed trace identifier. Propagated across all workflow steps.",
+      "pattern": "^trace_[A-Za-z0-9_\\-]+$"
+    },
+    "idempotency_key": {
+      "type": ["string", "null"],
+      "description": "Optional idempotency key to prevent duplicate live execution.",
+      "maxLength": 128
+    },
+    "action": {
+      "type": "string",
+      "description": "The operation to perform.",
+      "enum": [
+        "health_check",
+        "create_agent",
+        "execute_task",
+        "evaluate_agent",
+        "evolve_agent",
+        "registry_sync",
+        "telemetry_log",
+        "list_agents",
+        "get_agent",
+        "update_agent_status"
+      ]
+    },
+    "objective": {
+      "type": "string",
+      "description": "Human-readable description of the desired outcome. Required, non-empty.",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "requested_by": {
+      "type": "string",
+      "description": "Identifier of the operator or system submitting this command.",
+      "default": "operator"
+    },
+    "priority": {
+      "type": "string",
+      "description": "Execution priority hint.",
+      "enum": ["low", "normal", "medium", "high", "urgent", "critical"],
+      "default": "normal"
+    },
+    "run_mode": {
+      "type": "string",
+      "description": "Execution mode. draft/dry_run/read_only are safe. live requires approval for write actions.",
+      "enum": ["draft", "dry_run", "read_only", "live"],
+      "default": "draft"
+    },
+    "approval_status": {
+      "type": "string",
+      "description": "Approval gate status. live write actions require approved.",
+      "enum": ["not_required", "pending", "approved", "rejected", "expired"],
+      "default": "not_required"
+    },
+    "agent_id": {
+      "type": ["string", "null"],
+      "description": "Target agent code or identifier for agent-specific actions.",
+      "default": null
+    },
+    "context": {
+      "type": "object",
+      "description": "Action-specific context payload.",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Caller metadata: client type, session info, source system.",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}
