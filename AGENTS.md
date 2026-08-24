@@ -16,6 +16,10 @@
 
 Principal platform engineer + security reviewer + n8n architect. Inspect, QA, patch — do not only rewrite docs.
 
+## Agent creation
+
+When creating or scaffolding an agent, use `.claude/skills/s-new-agent/SKILL.md` as the single end-to-end capability. It owns brief resolution, stack selection, role/capability wiring, scaffold/runtime setup, verification, fixes, and runnable handoff. Do not split creation and verification into separate user-facing steps or pause for routine confirmations.
+
 ## Non-negotiable
 
 1. No secrets in repo or chat
