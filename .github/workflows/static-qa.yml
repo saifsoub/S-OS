@@ -20,6 +20,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Command gateway regression tests
+        run: node --test tests/command-gateway.test.cjs
+
       - name: Validate JSON schemas
         run: python3 scripts/validate-schemas.py
 
