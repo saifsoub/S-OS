@@ -8,7 +8,7 @@ on:
 
 jobs:
   static-qa:
-    name: Static QA — v0.2.0
+    name: Static QA — v0.2.0 + Context v2
     runs-on: ubuntu-latest
 
     steps:
@@ -27,6 +27,11 @@ jobs:
 
       - name: Command gateway regression tests
         run: node --test tests/command-gateway.test.cjs
+
+      - name: S/Context v2 tests
+        run: |
+          cd context-v2
+          npm test
 
       - name: Validate JSON schemas
         run: python3 scripts/validate-schemas.py
