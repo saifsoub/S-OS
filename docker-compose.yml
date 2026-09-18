@@ -38,6 +38,29 @@ services:
     networks:
       - agentos_network
 
+  s-context-v2:
+    build:
+      context: ./context-v2
+    restart: unless-stopped
+    ports:
+      - "${S_CONTEXT_BIND_ADDRESS:-127.0.0.1}:${S_CONTEXT_PORT:-8787}:8787"
+    environment:
+      - PORT=8787
+      - HOST=0.0.0.0
+      - S_CONTEXT_DB=/data/context-v2.sqlite
+      - S_CONTEXT_OPERATOR_KEY=${S_CONTEXT_OPERATOR_KEY}
+      - S_CONTEXT_PRINCIPAL_KEYS=${S_CONTEXT_PRINCIPAL_KEYS:-{}}
+    volumes:
+      - context_v2_data:/data
+    networks:
+      - agentos_network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -60,6 +83,8 @@ volumes:
   n8n_data:
     driver: local
   postgres_data:
+    driver: local
+  context_v2_data:
     driver: local
 
 networks:
