@@ -1,6 +1,6 @@
 # S/Context v2
 
-S/Context v2 is the context operating layer for S/OS.
+S/Context v2 is the context operating layer for S/OS. In S/ terminology, the **server** is the operator-owned or operator-leased host where the user's agents are hosted. Individual gateways, context services, workflow engines, and agent processes are services running on or connected through that server; they are not called the server themselves.
 
 It combines five planes:
 
@@ -29,4 +29,4 @@ SQLite (WAL mode) is used for the context service so deployment does not depend 
 
 ## Truthful action boundary
 
-S/Context v2 does not pretend to execute external actions. `/v2/actions/record` validates and consumes an active capability grant, then records the externally executed/resulting action receipt. Execution remains the responsibility of the S/OS executor/tool adapter.
+S/Context v2 does not pretend to execute external actions. `/v2/actions/record` validates and consumes an active capability grant, then records the externally executed/resulting action receipt. `/v2/actions/record` does not infer server-level execution or side-effect state. Actual execution occurs through whichever agent/tool/workflow path is configured on the server, and its result must be verified from that path's receipt or observable result.
