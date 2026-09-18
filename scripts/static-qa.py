@@ -9,7 +9,6 @@ import shutil
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
 SCHEMA = ROOT / "supabase" / "schema.sql"
-DASHBOARD = ROOT / "dashboard" / "index.html"
 CURL_TESTS = ROOT / "tests" / "curl-tests.sh"
 DOCKER = ROOT / "docker-compose.yml"
 
@@ -92,7 +91,7 @@ try:
 except Exception as e:
     add("supabase_schema_alignment", False, str(e))
 
-# 4. Command gateway preserves body after auth and uses canonical operator key
+# 4. Command gateway uses the canonical operator key and normalizes input
 try:
     gateway = workflow_data["s-agentos-command-gateway.json"]
     auth_node = next(n for n in gateway["nodes"] if n.get("name") == "Code — Extract & Validate Auth")
@@ -102,10 +101,10 @@ try:
         "S_AGENTOS_API_TOKEN" in code,
         "x-agentos-key" in code.lower(),
         "authorization" in code.lower(),
-        "...incoming" in code,
-        "body" in code and "headers" in code,
+        "...incoming" not in code,
+        "command:" in code and "body.context" in code,
     ]
-    add("command_gateway_auth_patch", all(checks), "operator key + bearer/X header + body propagation present" if all(checks) else "one or more auth patch checks failed")
+    add("command_gateway_auth_patch", all(checks), "operator key + bearer/X header + normalized command present" if all(checks) else "one or more auth patch checks failed")
 except Exception as e:
     add("command_gateway_auth_patch", False, str(e))
 
@@ -126,20 +125,25 @@ try:
 except Exception as e:
     add("curl_tests_bash_syntax", False, str(e))
 
-# 7. Dashboard JS syntax
+# 7. Validate the embedded workflow code owned by this repository.
+# The existing company control room is maintained in its own repository.
 try:
-    html = DASHBOARD.read_text()
-    scripts = re.findall(r"<script[^>]*>(.*?)</script>", html, flags=re.S | re.I)
-    if shutil.which("node") and scripts:
-        tmp = ROOT / ".dashboard.syntaxcheck.tmp.js"
-        tmp.write_text("\n".join(scripts))
-        proc = subprocess.run(["node", "--check", str(tmp)], capture_output=True, text=True)
-        tmp.unlink(missing_ok=True)
-        add("dashboard_js_syntax", proc.returncode == 0, proc.stderr.strip())
-    else:
-        add("dashboard_js_syntax", True, "node unavailable or no script; skipped")
+    if not shutil.which("node"):
+        raise RuntimeError("node is required for workflow code syntax validation")
+    bad = []
+    checked = 0
+    for fname, data in workflow_data.items():
+        for node in data.get("nodes", []):
+            if node.get("type") != "n8n-nodes-base.code":
+                continue
+            checked += 1
+            code = node.get("parameters", {}).get("jsCode", "")
+            proc = subprocess.run(["node", "--check"], input="async function workflowCode() {\n" + code + "\n}", capture_output=True, text=True)
+            if proc.returncode:
+                bad.append(f"{fname}:{node.get('name')}: {proc.stderr.strip()}")
+    add("workflow_code_js_syntax", checked > 0 and not bad, "; ".join(bad) if bad else f"{checked} workflow code nodes parsed")
 except Exception as e:
-    add("dashboard_js_syntax", False, str(e))
+    add("workflow_code_js_syntax", False, str(e))
 
 # 8. Version alignment
 try:
