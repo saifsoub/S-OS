@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'); const assert=require('node:assert/strict'); const os=require('os'); const path=require('path'); const fs=require('fs');
 const {ContextDB}=require('../src/db'); const {compileContext}=require('../src/compiler');
-function temp(){const f=path.join(os.tmpdir(),`sctx-${Date.now()}-${Math.random()}`.sqlite);return f;}
+function temp(){const f=path.join(os.tmpdir(),`sctx-${Date.now()}-${Math.random()}.sqlite`);return f;}
 function setup(){const f=temp();const db=new ContextDB(f);return{db,f,cleanup(){try{db.db.close()}catch{};for(const s of ['', '-wal','-shm'])fs.rmSync(f+s,{force:true});}}}
 function grantRW(db,p){for(const cap of ['read:training','write:training'])db.grant({principal:p,source:'context:s-master',cap,ttl_seconds:3600},'human:owner');}
 test('selective compile returns canonical slice only',()=>{const x=setup();try{grantRW(x.db,'agent:writer');const b=compileContext(x.db,{citation:'@context/s-master#training',max_tokens:1000},'agent:writer');assert.equal(b.context.canonical.text.includes('canonical'),true);assert.equal(b.context.canonical.tasks,undefined);}finally{x.cleanup();}});
