@@ -54,34 +54,37 @@ test('unapproved live writes and invalid envelopes are rejected', () => {
   assert.equal(authenticate({}, { action: 'unknown' }).validationValid, false);
 });
 
-test('caller-supplied approval cannot turn an unconnected router into execution', () => {
+test('gateway does not infer server execution or side-effect state', () => {
   const input = authenticate({ 'X-AgentOS-Key': 'test-only-operator-key' }, {
     run_mode: 'live', approval_status: 'approved', idempotency_key: 'bounded-fixture',
   });
   const result = runNode('Code — Route Command', input);
-  assert.equal(result.ok, false);
-  assert.equal(result.code, 503);
-  assert.equal(result.result.accepted, false);
-  assert.equal(result.result.side_effects_enabled, false);
-  assert.equal(result.result.execution_status, 'not_dispatched');
+  assert.equal(result.ok, true);
+  assert.equal(result.code, 200);
+  assert.equal(result.result.accepted_by_gateway, true);
+  assert.equal(result.result.gateway_status, 'route_resolved');
+  assert.equal(result.result.server_execution_status, 'not_observed_by_gateway');
+  assert.equal(result.result.side_effects_status, 'not_observed_by_gateway');
+  assert.equal(result.result.side_effects_enabled, undefined);
   assert.equal(result.idempotency_key, 'bounded-fixture');
 });
 
-test('draft plans never claim work was accepted or dispatched', () => {
+test('draft route is reported without making server-level claims', () => {
   const result = runNode('Code — Route Command', authenticate({}, { action: 'evolve_agent' }));
   assert.equal(result.ok, true);
   assert.equal(result.route, 'evolution_engine');
-  assert.equal(result.result.accepted, false);
-  assert.equal(result.result.execution_status, 'not_dispatched');
-  assert.equal(result.result.side_effects_enabled, false);
+  assert.equal(result.result.accepted_by_gateway, true);
+  assert.equal(result.result.server_execution_status, 'not_observed_by_gateway');
+  assert.equal(result.result.side_effects_status, 'not_observed_by_gateway');
 });
 
-test('health distinguishes gateway availability from unverified company readiness', () => {
+test('health reports gateway state separately from server state', () => {
   const result = runNode('Code — Route Command', authenticate({}, { action: 'health_check' }));
   assert.equal(result.ok, true);
   assert.equal(result.result.status, 'gateway_available');
-  assert.equal(result.result.runtime_readiness, 'not_verified');
-  assert.equal(result.result.dispatch_available, false);
+  assert.equal(result.result.server_status, 'not_checked_by_gateway');
+  assert.equal(result.result.dispatch_status, 'not_checked_by_gateway');
+  assert.equal(result.result.side_effects_status, 'not_checked_by_gateway');
 });
 
 test('HTTP response nodes use the n8n responseCode contract', () => {
