@@ -147,3 +147,18 @@ Read [AGENTS.md](AGENTS.md). Rule: `~/.cursor/rules/s-agentos.mdc`.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+
+---
+
+## OpenHuman × Intent-Preserving Execution Loop
+
+OpenHuman is now wired into S-OS as the governed multi-agent execution layer.
+
+Canonical resources:
+- [Intent-preserving execution architecture](docs/OPENHUMAN_INTENT_LOOP.md)
+- [OpenHuman crew registry](registry/openhuman-crew.yaml)
+- [Execution run schema](schemas/intent-preserving-loop.schema.json)
+- [ChatGPT plugin binding](plugins/openhuman/PLUGIN_BINDING.md)
+
+The invariant is simple: workers may specialize the work, but they may not rewrite the operator's original intent.
