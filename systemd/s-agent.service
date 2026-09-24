@@ -1,5 +1,5 @@
 [Unit]
-Description=S/ Persistent Agent
+Description=S-CLI Persistent Server Agent
 After=network-online.target tailscaled.service
 Wants=network-online.target
 Requires=tailscaled.service
