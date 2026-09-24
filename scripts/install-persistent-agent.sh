@@ -20,6 +20,13 @@ require git
 require tailscale
 require codex
 
+# Operator-facing identity. Codex remains the internal CLI engine.
+sudo tee /usr/local/bin/s-cli >/dev/null <<'EOF'
+#!/usr/bin/env bash
+exec codex "$@"
+EOF
+sudo chmod 0755 /usr/local/bin/s-cli
+
 if ! tailscale status >/dev/null 2>&1; then
   echo "tailscale is installed but not connected" >&2
   exit 1
@@ -67,3 +74,4 @@ fi
 sudo systemctl enable --now "$SERVICE_NAME"
 sleep 2
 sudo systemctl --no-pager --full status "$SERVICE_NAME"
+echo "S-CLI engine: $(s-cli --version)"
