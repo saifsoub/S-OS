@@ -56,7 +56,7 @@ sudo install -m 0644 "$REPO_DIR/systemd/s-agent.service" /etc/systemd/system/s-a
 
 sudo systemctl daemon-reload
 
-if ! sudo grep -Eq '^S_AGENT_COMMAND=.+[^'\''"]$|^S_AGENT_COMMAND=['\''"].+['\'']$|^S_AGENT_COMMAND=".+">$' "$ENV_FILE" 2>/dev/null; then
+if ! sudo bash -c 'set -a; source /etc/s-agent/runtime.env; [[ -n "${S_AGENT_COMMAND:-}" ]]'; then
   echo
   echo "Persistent service installed but not started."
   echo "Set S_AGENT_COMMAND in $ENV_FILE to the working Minis/Bridge worker command, then run:"
