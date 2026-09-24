@@ -1,0 +1,94 @@
+version: "1.0"
+name: openhuman-crew
+owner: S/Agency by Seif Alsoub
+control_plane: S-OS
+execution_spine: intent-preserving-execution-loop
+
+roles:
+  orchestrator:
+    purpose: Preserve original intent, build goal contract, route work, merge verified outputs.
+    required_skills:
+      - intent-preserving-execution-loop
+      - orchestrate-agent-fleet
+      - workflow-builder
+
+  classifier:
+    purpose: Determine execution lane, permissions, and routing metadata without changing the goal.
+    required_outputs:
+      - classification
+      - data_boundary
+      - permission_boundary
+      - routing_hints
+
+  router:
+    purpose: Choose the smallest capable tools, agents, runtimes, APIs, and skills.
+    constraints:
+      - no silent mandate expansion
+      - preserve explicit dependencies
+      - parallelize only independent branches
+
+  researcher:
+    purpose: Gather and reconcile evidence for research-heavy branches.
+    required_skills:
+      - deep-research
+
+  executor:
+    purpose: Perform bounded assigned work and return artifact plus evidence.
+    return_contract:
+      - result
+      - evidence
+      - changed_state
+      - blockers
+      - uncertainty
+      - side_effects
+
+  checker:
+    purpose: Independently validate the merged result against the original goal contract.
+    independence_rule: Must not treat executor self-report as sufficient evidence.
+    checks:
+      - completeness
+      - factual_support
+      - artifact_exists
+      - permissions_respected
+      - side_effects_authorized
+      - original_intent_preserved
+
+  repairer:
+    purpose: Diagnose failed branches, select smallest repair, preserve successful work, re-run only what failed.
+    failure_loop:
+      - diagnose
+      - repair
+      - learn
+      - rerun
+
+  memory_keeper:
+    purpose: Maintain compact durable project state and lessons.
+    required_skills:
+      - memory-state
+    retain:
+      - decisions
+      - evidence
+      - canonical_artifacts
+      - constraints
+      - learned_repairs
+      - unresolved_blockers
+      - next_action
+    never_retain:
+      - secrets
+      - unnecessary_raw_transcripts
+
+  approval_guard:
+    purpose: Enforce owner control around consequential actions.
+    required_skills:
+      - approval-gates
+
+  handoff_manager:
+    purpose: Preserve task contract, permissions, evidence requirements, and state across runtime boundaries.
+    required_skills:
+      - agent-handoff
+
+closure_states:
+  - completed_with_evidence
+  - rerouted_and_completed
+  - held_with_explicit_trigger
+  - blocked_by_unavoidable_external_boundary
