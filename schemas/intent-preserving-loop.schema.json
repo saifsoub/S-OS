@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://s-agency.local/schemas/intent-preserving-loop.schema.json",
+  "title": "S/ Intent-Preserving Execution Run",
+  "type": "object",
+  "required": ["run_id", "trigger", "goal_contract", "status"],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "trigger": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["manual", "schedule", "event", "webhook", "upstream_completion", "agent_request"]
+        },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "goal_contract": {
+      "type": "object",
+      "required": ["objective", "success_criteria"],
+      "properties": {
+        "objective": { "type": "string", "minLength": 1 },
+        "deliverable": { "type": ["string", "null"] },
+        "constraints": { "type": "array", "items": { "type": "string" } },
+        "protected_boundaries": { "type": "array", "items": { "type": "string" } },
+        "required_evidence": { "type": "array", "items": { "type": "string" } },
+        "success_criteria": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "stop_conditions": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "classification": { "type": ["object", "null"] },
+    "route": { "type": ["object", "null"] },
+    "branches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "owner": { "type": ["string", "null"] },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "running", "passed", "failed", "repairing", "held", "blocked"]
+          },
+          "artifact": {},
+          "evidence": { "type": "array" },
+          "blockers": { "type": "array" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "checker": {
+      "type": ["object", "null"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "findings": { "type": "array", "items": { "type": "string" } },
+        "intent_preserved": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "memory_delta": { "type": ["object", "null"] },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "completed_with_evidence",
+        "rerouted_and_completed",
+        "held_with_explicit_trigger",
+        "blocked_by_unavoidable_external_boundary"
+      ]
+    }
+  },
+  "additionalProperties": true
+}
