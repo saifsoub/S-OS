@@ -8,12 +8,6 @@ git fetch origin main
 git switch main
 git pull --ff-only origin main
 
-if ! sudo bash -c 'set -a; source /etc/s-agent/runtime.env 2>/dev/null; test -n "${S_AGENT_COMMAND:-}"'; then
-  echo "BLOCKED: configure S_AGENT_COMMAND in /etc/s-agent/runtime.env with the existing bridge worker command." >&2
-  echo "No substitute worker command will be guessed or started." >&2
-  exit 2
-fi
-
 sudo bash scripts/install-persistent-agent.sh
 tailscale status >/dev/null
 s-cli --version
