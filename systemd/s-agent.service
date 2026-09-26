@@ -1,0 +1,25 @@
+[Unit]
+Description=S-CLI Persistent Server Agent
+After=network-online.target tailscaled.service
+Wants=network-online.target
+Requires=tailscaled.service
+
+[Service]
+Type=simple
+User=s-agent
+Group=s-agent
+Environment=S_AGENT_ENV_FILE=/etc/s-agent/runtime.env
+ExecStart=/opt/s-os/scripts/s-agent-entrypoint.sh
+Restart=always
+RestartSec=3
+TimeoutStopSec=30
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/s-os /var/lib/s-agent /var/log/s-agent
+WorkingDirectory=/opt/s-os
+
+[Install]
+WantedBy=multi-user.target
