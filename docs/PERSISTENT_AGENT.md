@@ -140,7 +140,7 @@ The unit uses `Restart=always`, so the worker returns after:
 ## Security boundary
 
 - private exposure remains on Tailscale;
-- secrets live in `/etc/s-agent/runtime.env` with mode `0600`;
+- secrets live in `/etc/s-agent/runtime.env` with mode `0640`, owned by `root:s-agent` inside a `0750` directory;
 - the service runs as `s-agent`, not root;
 - no provider token is added to browser code;
 - no public Funnel exposure is required.
