@@ -43,6 +43,7 @@ if ! id -u s-agent >/dev/null 2>&1; then
   sudo useradd --system --home "$STATE_DIR" --shell /usr/sbin/nologin s-agent
 fi
 
+sudo chown root:s-agent "$ENV_DIR"
 sudo chown -R s-agent:s-agent "$STATE_DIR" "$LOG_DIR"
 
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -54,11 +55,15 @@ if [[ ! -f "$ENV_FILE" ]]; then
 # S_AGENT_COMMAND='your-minis-or-bridge worker command here'
 S_AGENT_COMMAND=''
 EOF
-  sudo chmod 0600 "$ENV_FILE"
   echo "created $ENV_FILE"
 fi
 
-sudo install -m 0755 "$REPO_DIR/scripts/s-agent-entrypoint.sh" /opt/s-os/scripts/s-agent-entrypoint.sh
+sudo chown root:s-agent "$ENV_FILE"
+sudo chmod 0640 "$ENV_FILE"
+
+# The unit executes the entrypoint directly from the checkout; copying it
+# onto itself fails when REPO_DIR is /opt/s-os.
+sudo chmod 0755 /opt/s-os/scripts/s-agent-entrypoint.sh
 sudo install -m 0644 "$REPO_DIR/systemd/s-agent.service" /etc/systemd/system/s-agent.service
 
 sudo systemctl daemon-reload
