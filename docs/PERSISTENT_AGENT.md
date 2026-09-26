@@ -89,8 +89,8 @@ From the server:
 ```bash
 cd /opt/s-os
 git fetch origin
-git checkout codex/persistent-server-agent
-git pull
+git switch main
+git pull --ff-only origin main
 sudo bash scripts/install-persistent-agent.sh
 ```
 
