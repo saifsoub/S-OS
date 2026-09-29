@@ -4,10 +4,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { createHmac } = require('node:crypto');
+const { createHmac, randomBytes } = require('node:crypto');
 const { MissionExecutor } = require('../src/executor');
 
-const key = 'test-only-passport-signing-key-32-bytes';
+const key = randomBytes(32).toString('hex');
 const command = { command_id: 'cmd_test', trace_id: 'trace_test', action: 'execute_task', objective: 'Prepare bounded report', run_mode: 'live', approval_status: 'approved', idempotency_key: 'idem-test', agent_id: 'worker:research', context: {} };
 function token(overrides = {}) {
   const payload = Buffer.from(JSON.stringify({ jti: 'passport-1', owner: 'owner:test', subject: 'worker:research', purpose: command.objective, scopes: ['execute:mission'], exp: Math.floor(Date.now() / 1000) + 60, ...overrides })).toString('base64url');
