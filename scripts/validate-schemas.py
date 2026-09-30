@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-S/ AgentOS — JSON Schema Validator
+S-OS — JSON Schema Validator
 Validates all JSON schema files and cross-checks command.schema.json
 against the canonical command envelope fields.
 """
