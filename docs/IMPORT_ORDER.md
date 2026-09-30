@@ -1,6 +1,6 @@
 # n8n Import Order
 
-Use this order for the patched S/ AgentOS Kernel v0.1.3.
+Use this order for the patched S-OS Kernel v0.1.3.
 
 ## Required
 
