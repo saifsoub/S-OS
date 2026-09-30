@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://s-agentos.local/schemas/telemetry-event.schema.json",
-  "title": "S/ AgentOS Telemetry Event",
+  "title": "S-OS Telemetry Event",
   "type": "object",
   "required": ["event_type"],
   "additionalProperties": false,
