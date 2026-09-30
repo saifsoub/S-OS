@@ -1,4 +1,4 @@
-# CHANGELOG — S/ AgentOS Kernel v0.2.0
+# CHANGELOG — S-OS Kernel v0.2.0
 
 ## Release: v0.2.0 Claude hardening line
 **Date:** 2026-05-22
