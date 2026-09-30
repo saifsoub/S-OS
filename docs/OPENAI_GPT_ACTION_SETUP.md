@@ -1,6 +1,6 @@
 # GPT Actions Setup
 
-Use `openapi/s-agentos-kernel-v0.2.0.openapi.yaml` for S/ Operations GPT.
+Use `openapi/s-agentos-kernel-v0.2.0.openapi.yaml` for Operations GPT.
 
 ## Server URL
 
