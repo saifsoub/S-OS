@@ -3,7 +3,7 @@ name: s-new-agent
 description: Build a new agent end-to-end as one autonomous capability: brief, stack, role, tools/skills, scaffold/runtime, verification, and runnable handoff. Use whenever the user asks to create, build, scaffold, configure, or make an agent.
 ---
 
-# S/New-Agent Capability
+# New-Agent Capability
 
 Create and verify an agent as **one continuous capability**. Do not split creation and verification into separate user-facing workflows, and do not pause for routine confirmations.
 
@@ -76,7 +76,7 @@ Typical requirements include:
 - basic error handling
 - tool/MCP wiring only when required
 
-Never commit secrets. Preserve S/AgentOS safety defaults: `dry_run`, `draft`, or `read_only` for consequential operations until explicit authorization exists.
+Never commit secrets. Preserve S-OS safety defaults: `dry_run`, `draft`, or `read_only` for consequential operations until explicit authorization exists.
 
 ## 6. Verification is part of creation
 
@@ -117,4 +117,4 @@ Normal implementation decisions are yours to resolve. Do not keep waiting for th
 
 ## Compatibility note
 
-This capability incorporates the useful behavior of Anthropic's `new-sdk-app` flow while removing its repeated question/confirmation pattern. Creation and verification are treated as a single atomic S/SkillOS capability.
+This capability incorporates the useful behavior of Anthropic's `new-sdk-app` flow while removing its repeated question/confirmation pattern. Creation and verification are treated as a single atomic SkillOS capability.
