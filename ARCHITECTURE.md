@@ -115,7 +115,7 @@ Every operation uses the same JSON structure:
   "idempotency_key": "idem_create_20260522_001",
   "action": "create_agent",
   "objective": "Create a Telegram revenue operations agent",
-  "requested_by": "seif",
+  "requested_by": "operator",
   "priority": "high",
   "run_mode": "draft",
   "approval_status": "not_required",
