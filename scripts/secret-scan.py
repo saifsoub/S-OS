@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-S/ AgentOS — Secret Scanner
+S-OS — Secret Scanner
 Detects common secret patterns in repository files before commit or CI.
 """
 import pathlib
