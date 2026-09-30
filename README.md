@@ -1,11 +1,11 @@
-# S-OS — S/ AgentOS Control Plane
+# S-OS — Control Plane
 
 [![Kernel](https://img.shields.io/badge/kernel-v0.2.0-blue)](MANIFEST.json)
 [![Stack](https://img.shields.io/badge/stack-n8n%20%2B%20Supabase%20%2B%20Docker-0f766e)](docs/ECOSYSTEM.md)
 
 **S-OS** is the governed control plane for a solo operator running multiple agents, businesses, and automations. It is not a chat UI — it is the **command gateway**, **agent registry**, **telemetry**, and **evolution loop** that everything else plugs into.
 
-Part of the **S/ Operator Stack**:
+Part of the **Operator Stack**:
 
 | Repo | Role |
 |------|------|
