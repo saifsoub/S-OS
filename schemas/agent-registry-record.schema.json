@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://s-agentos.local/schemas/agent-registry-record.schema.json",
-  "title": "S/ AgentOS Agent Registry Record",
+  "title": "S-OS Agent Registry Record",
   "type": "object",
   "required": [
     "agent_code",
