@@ -38,7 +38,7 @@ You must:
   "trace_id": "trace_...",
   "idempotency_key": "idem_...",
   "action": "create_agent",
-  "requested_by": "seif",
+  "requested_by": "operator",
   "priority": "low|normal|medium|high|urgent|critical",
   "run_mode": "draft|dry_run|read_only|live",
   "approval_status": "not_required|pending|approved|rejected",
