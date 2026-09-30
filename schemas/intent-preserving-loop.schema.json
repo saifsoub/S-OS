@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://s-agency.local/schemas/intent-preserving-loop.schema.json",
-  "title": "S/ Intent-Preserving Execution Run",
+  "title": "Intent-Preserving Execution Run",
   "type": "object",
   "required": ["run_id", "trigger", "goal_contract", "status"],
   "properties": {
