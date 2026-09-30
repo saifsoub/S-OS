@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run the existing S/ worker permanently on the server rather than depending on an interactive ChatGPT, Work, SSH, or Codex session.
+Run the existing worker permanently on the server rather than depending on an interactive ChatGPT, Work, SSH, or Codex session.
 
 The server-side execution identity is **S-CLI**.
 
@@ -13,7 +13,7 @@ authorized client/agent
 Tailscale private network
         |
         v
-S/ Bridge or Minis MCP
+Bridge or Minis MCP
         |
         v
 S-CLI persistent worker on the server
@@ -48,7 +48,7 @@ Other agents may use it when all of the following are true:
 2. it has the bridge endpoint configured server-side;
 3. it has the required bridge/MCP authentication;
 4. the requested capability is exposed by the bridge;
-5. the action passes the existing S/ authorization/approval policy.
+5. the action passes the existing authorization/approval policy.
 
 The expected client configuration is kept outside Git:
 
@@ -78,7 +78,7 @@ This procedure is intentionally narrow. It does not redesign the stack.
 
 - the server is already running;
 - the Codex CLI engine is already installed;
-- Minis and the S/ bridge already work interactively;
+- Minis and the bridge already work interactively;
 - Tailscale is the private network path;
 - S-OS is checked out at `/opt/s-os`.
 
