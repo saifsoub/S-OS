@@ -1,6 +1,6 @@
 version: "1.0"
 name: openhuman-crew
-owner: S/Agency by Seif Alsoub
+owner: the maintainers
 control_plane: S-OS
 execution_spine: intent-preserving-execution-loop
 
