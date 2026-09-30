@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: S/ AgentOS Kernel Command API
+  title: S-OS Kernel Command API
   version: 0.2.0
   description: >
     Universal agentic operating system kernel. Provider-agnostic: works with any
@@ -22,7 +22,7 @@ paths:
   /webhook/s-agentos-command:
     post:
       operationId: sendAgentOSCommand
-      summary: Send a command to the S/ AgentOS kernel
+      summary: Send a command to the S-OS kernel
       x-openai-isConsequential: true
       requestBody:
         required: true
@@ -35,7 +35,7 @@ paths:
                 summary: Health check
                 value:
                   action: health_check
-                  objective: Check S/ AgentOS kernel status.
+                  objective: Check S-OS kernel status.
                   requested_by: operator
                   priority: low
                   run_mode: dry_run
