@@ -23,3 +23,11 @@ Tests: python3 -m unittest discover -s tests -p test_server_diagnostic_bridge.py
 Rollback: sudo systemctl disable --now s-server-bridge
 
 Host installation, private routing, credential binding, and live acceptance remain unverified until performed on the server.
+
+## Task execution contract
+
+POST /v1/tasks with Authorization: Bearer <server-side-token> and JSON {"task":"server_verify","idempotency_key":"unique-task-id"}. The bridge executes the fixed server checks and stores a completed or failed receipt in /var/lib/s-server-bridge/tasks.sqlite3. GET /v1/receipts/<receipt_id> retrieves it. Concurrent and later duplicates do not redispatch. A crash after claiming a task leaves status running and retry_safe false; reconcile on-host before any manual retry. This is a diagnostic task channel only, not an arbitrary shell or general S-CLI mission dispatcher, and not an MCP transport.
+
+Run all bridge tests with: python3 -m unittest discover -s tests -p 'test_server*.py' -v
+
+Eight tests pass locally. Private installation and an authorized client route are required before calling this a connected channel. Keep the loopback default until the private route is verified. Use a secure client secret binding; do not paste the bearer token into chat.
