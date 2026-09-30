@@ -1,4 +1,4 @@
-# Workflow Man Upgrade Notes — S/ AgentOS Kernel v0.1.3
+# Workflow Man Upgrade Notes — S-OS Kernel v0.1.3
 
 ## What Workflow Man patched
 
