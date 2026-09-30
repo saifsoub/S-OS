@@ -1,8 +1,8 @@
-# S/ AgentOS Kernel — Architecture
+# S-OS Kernel — Architecture
 
 ## What This Is
 
-S/ AgentOS is a **self-hosted agentic operating system kernel** for a solo operator.
+S-OS is a **self-hosted agentic operating system kernel** for a solo operator.
 It is not a chatbot. It is not a no-code builder. It is the programmable backbone that
 lets you run, govern, evaluate, and evolve autonomous agents — while remaining in control.
 
@@ -84,7 +84,7 @@ Commands can chain:
 │                   KERNEL GATEWAY LAYER (n8n)                              │
 │                          │                                    │          │
 │  ┌───────────────────────▼────────────────────────▼───────┐  │
-│  │              S/ AgentOS Command Gateway v0.2.0                     │  │
+│  │              S-OS Command Gateway v0.2.0                     │  │
 │  │                                                                    │  │
 │  │  1. Auth check (X-AgentOS-Key / Bearer)                           │  │
 │  │  2. Schema validation (action + objective required)               │  │
