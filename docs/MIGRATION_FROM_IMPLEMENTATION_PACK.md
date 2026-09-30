@@ -1,4 +1,4 @@
-# Migration from the Previous S/ AgentOS Implementation Pack
+# Migration from the Previous S-OS Implementation Pack
 
 ## Use from Kimi/Workflow Man v0.1.3
 
