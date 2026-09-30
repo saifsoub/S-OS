@@ -1,9 +1,9 @@
-# v0.2.0 Upgrade Specification — S/ AgentOS Kernel
+# v0.2.0 Upgrade Specification — S-OS Kernel
 
 ## Minimum viable v0.2.0
 
 ### 1. Version alignment
-All references should consistently say `S/ AgentOS Kernel v0.2.0`.
+All references should consistently say `S-OS Kernel v0.2.0`.
 
 ### 2. Canonical command envelope
 
