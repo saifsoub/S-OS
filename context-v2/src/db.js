@@ -81,7 +81,7 @@ class ContextDB {
     if (!row) {
       this.db.prepare('INSERT INTO contexts(id,version,sections_json,updated_at,history_json) VALUES(?,?,?,?,?)')
         .run('s-master', 1, j({
-          training: { text: 'S/ Context v2 canonical training material.' },
+          training: { text: 'Context v2 canonical training material.' },
           decisions: [], tasks: [], topics: []
         }), iso(), '[]');
       this.appendAudit('context.created', 'system:bootstrap', 's-master', { version: 1 });
