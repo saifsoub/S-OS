@@ -1,4 +1,4 @@
-# First-Run Deployment — S/ AgentOS Kernel v0.1.3
+# First-Run Deployment — S-OS Kernel v0.1.3
 
 This is an isolated first-run procedure. For an existing company installation,
 inventory deployed versions, workflows, migrations and durable volumes first;
