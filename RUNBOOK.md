@@ -1,4 +1,4 @@
-# S/ AgentOS Kernel v0.2.0 — Runbook
+# S-OS Kernel v0.2.0 — Runbook
 
 ## Fresh Deployment (v0.2.0)
 
