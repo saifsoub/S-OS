@@ -1,5 +1,5 @@
 [Unit]
-Description=S/ Private Server Diagnostic Bridge
+Description=S/ Private Server Task Bridge
 After=network-online.target tailscaled.service
 Wants=network-online.target
 [Service]
@@ -7,6 +7,9 @@ User=s-agent
 Group=s-agent
 EnvironmentFile=/etc/s-agent/bridge.env
 ExecStart=/usr/bin/python3 /opt/s-os/scripts/server-diagnostic-bridge.py
+StateDirectory=s-server-bridge
+StateDirectoryMode=0700
+ReadWritePaths=/var/lib/s-server-bridge
 Restart=on-failure
 NoNewPrivileges=true
 PrivateTmp=true
