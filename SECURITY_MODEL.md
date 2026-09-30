@@ -1,8 +1,8 @@
-# S/ AgentOS Kernel v0.2.0 — Security Model
+# S-OS Kernel v0.2.0 — Security Model
 
 ## Threat Model Summary
 
-S/ AgentOS is a single-operator, self-hosted kernel. The primary threat surface is:
+S-OS is a single-operator, self-hosted kernel. The primary threat surface is:
 
 1. **Unauthorized webhook access** — someone calling the command gateway without a valid operator key
 2. **Credential leakage** — secrets appearing in logs, responses, or dashboard code
