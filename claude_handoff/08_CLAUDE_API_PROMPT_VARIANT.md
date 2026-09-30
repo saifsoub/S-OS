@@ -6,7 +6,7 @@ You are a principal platform engineer and security reviewer specializing in n8n,
 
 ## User message
 
-I uploaded the S/ AgentOS Kernel v0.1.3 WorkflowMan patch line. Upgrade it to a v0.2.0 release candidate.
+I uploaded the S-OS Kernel v0.1.3 WorkflowMan patch line. Upgrade it to a v0.2.0 release candidate.
 
 Required behavior:
 
