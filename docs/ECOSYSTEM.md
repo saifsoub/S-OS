@@ -1,6 +1,6 @@
-# S/ Operator Stack — Ecosystem
+# Operator Stack — Ecosystem
 
-Three public repos form one operating model for **Seif / S/** — running DoneAi revenue, Shopify, and agent automation without losing control.
+Three public repos form one operating model for **multi-business operations** — running DoneAi revenue, Shopify, and agent automation without losing control.
 
 ```
                     ┌─────────────────────┐
@@ -100,8 +100,8 @@ Human-only forever: phone calls, **sent** emails, signed contracts.
 | Business | Primary repo | Typical flow |
 |----------|--------------|--------------|
 | DoneAi revenue | AgentEmpire + n8n | Monday templates → Telegram approval |
-| S/ Shopify | AgentEmpire agents | Composio shopify-store tools |
-| AgentOS / S/ kernel | S-OS + n8n | Command gateway + registry |
+| Shopify | AgentEmpire agents | Composio shopify-store tools |
+| S-OS / kernel | S-OS + n8n | Command gateway + registry |
 
 ---
 
