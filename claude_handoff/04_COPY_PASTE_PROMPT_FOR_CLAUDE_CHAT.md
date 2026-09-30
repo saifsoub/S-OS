@@ -6,7 +6,7 @@ Upload the ZIP, then paste this:
 
 Take this repository to the next level.
 
-You are my principal engineer for **S/ AgentOS Kernel**. Inspect the uploaded ZIP and produce a **v0.2.0 release candidate**.
+You are my principal engineer for **S-OS Kernel**. Inspect the uploaded ZIP and produce a **v0.2.0 release candidate**.
 
 Focus on:
 
