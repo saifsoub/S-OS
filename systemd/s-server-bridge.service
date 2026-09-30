@@ -1,0 +1,16 @@
+[Unit]
+Description=S/ Private Server Diagnostic Bridge
+After=network-online.target tailscaled.service
+Wants=network-online.target
+[Service]
+User=s-agent
+Group=s-agent
+EnvironmentFile=/etc/s-agent/bridge.env
+ExecStart=/usr/bin/python3 /opt/s-os/scripts/server-diagnostic-bridge.py
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+[Install]
+WantedBy=multi-user.target
