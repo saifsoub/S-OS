@@ -254,8 +254,13 @@ class ContextDB {
   }
 
   syncSession(input, principal){
-    const id=input.session_id||crypto.randomUUID(); this.db.prepare(`INSERT INTO sessions(id,principal,refs_json,state_json,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET principal=excluded.principal,refs_json=excluded.refs_json,state_json=excluded.state_json,updated_at=excluded.updated_at`).run(id,principal,j(input.context_refs||[]),j(input.state||{}),iso());
-    this.appendAudit('session.synced',principal,id,{refs:input.context_refs||[]}); return this.getSession(id);
+    return this.transaction(()=>{
+      const id=input.session_id||crypto.randomUUID();
+      const existing=this.getSession(id);
+      if(existing && existing.principal!==principal) throw Object.assign(new Error('session_owner_required'),{statusCode:403});
+      this.db.prepare(`INSERT INTO sessions(id,principal,refs_json,state_json,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET refs_json=excluded.refs_json,state_json=excluded.state_json,updated_at=excluded.updated_at`).run(id,principal,j(input.context_refs||[]),j(input.state||{}),iso());
+      this.appendAudit('session.synced',principal,id,{refs:input.context_refs||[]}); return this.getSession(id);
+    });
   }
   getSession(id){const r=this.db.prepare('SELECT * FROM sessions WHERE id=?').get(id);return r?{id:r.id,principal:r.principal,contextRefs:p(r.refs_json,[]),state:p(r.state_json,{}),updatedAt:r.updated_at}:null;}
 
