@@ -1,4 +1,4 @@
-# S/ AgentOS Kernel v0.2.0 — Rollback Guide
+# S-OS Kernel v0.2.0 — Rollback Guide
 
 ## When to roll back
 
