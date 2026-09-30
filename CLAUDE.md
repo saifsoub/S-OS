@@ -1,10 +1,10 @@
-# CLAUDE.md — S/ AgentOS Kernel Project Memory
+# CLAUDE.md — S-OS Kernel Project Memory
 
 ## Project identity
 
-This repository is **S/ AgentOS Kernel v0.1.3 WorkflowMan patch line**.
+This repository is **S-OS Kernel v0.1.3 WorkflowMan patch line**.
 
-S/ AgentOS is a self-hosted agentic operating-system kernel for a solo executive/operator. It uses:
+S-OS is a self-hosted agentic operating-system kernel for a solo executive/operator. It uses:
 
 - n8n as the workflow orchestration layer
 - Supabase/PostgreSQL as operating memory and registry storage
@@ -25,7 +25,7 @@ Do **not** merely rewrite prose. Inspect the repository, run or simulate QA, the
 
 1. **No secrets**
    - Never ask the user to paste live tokens.
-   - Never include real Telegram, Groq, Supabase, n8n, OpenAI, Anthropic, Ziina, Stripe, Monday, Microsoft, or S/Drive keys.
+   - Never include real Telegram, Groq, Supabase, n8n, OpenAI, Anthropic, Ziina, Stripe, Monday, Microsoft, or Drive keys.
    - Use clear placeholders only.
 
 2. **Preserve safe defaults**
