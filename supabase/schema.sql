@@ -1,7 +1,7 @@
 -- ============================================================================
--- S/ AgentOS Kernel v0.1 — Complete Supabase/PostgreSQL Schema
+-- S-OS Kernel v0.1 — Complete Supabase/PostgreSQL Schema
 -- ============================================================================
--- Description: Core operating memory schema for the AgentOS kernel.
+-- Description: Core operating memory schema for the kernel.
 --              Stores commands, events, agent registry, execution runs,
 --              evaluation results, evolution plans, workflow registry,
 --              and model registry.
@@ -49,7 +49,7 @@ CREATE TABLE os_commands (
 
 COMMENT ON TABLE os_commands IS 'Stores all commands received by the command gateway. Primary ingestion table for operator directives and system control signals.';
 COMMENT ON COLUMN os_commands.received_at IS 'Timestamp when the command was received by the n8n Command Gateway workflow';
-COMMENT ON COLUMN os_commands.kernel_version IS 'AgentOS kernel version that processed this command, for tracking schema/API compatibility';
+COMMENT ON COLUMN os_commands.kernel_version IS 'Kernel version that processed this command, for tracking schema/API compatibility';
 COMMENT ON COLUMN os_commands.parameters IS 'Additional command parameters as flexible key-value store for extensibility.';
 
 CREATE INDEX idx_os_commands_command_id ON os_commands (command_id);
