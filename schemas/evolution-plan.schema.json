@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://s-agentos.local/schemas/evolution-plan.schema.json",
-  "title": "S/ AgentOS Evolution Plan",
+  "title": "S-OS Evolution Plan",
   "type": "object",
   "required": ["agent_id", "detected_gap", "proposed_improvement"],
   "additionalProperties": false,
