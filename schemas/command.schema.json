@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://s-agentos.kernel/schemas/command.v0.2.0.schema.json",
-  "title": "S/ AgentOS Command Envelope v0.2.0",
-  "description": "Canonical command envelope for all S/ AgentOS kernel operations.",
+  "title": "S-OS Command Envelope v0.2.0",
+  "description": "Canonical command envelope for all S-OS kernel operations.",
   "type": "object",
   "required": ["action", "objective"],
   "additionalProperties": false,
