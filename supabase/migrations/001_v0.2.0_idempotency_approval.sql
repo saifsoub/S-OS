@@ -1,5 +1,5 @@
 -- ============================================================================
--- S/ AgentOS Kernel v0.2.0 — Migration 001
+-- S-OS Kernel v0.2.0 — Migration 001
 -- Adds idempotency, approval, and audit tables to the v0.1.3 schema.
 -- Run AFTER schema.sql has been applied (v0.1.3 baseline).
 -- Safe to run multiple times (uses IF NOT EXISTS and CREATE OR REPLACE).
