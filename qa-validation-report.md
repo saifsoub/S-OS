@@ -1,4 +1,4 @@
-# S/ AgentOS Kernel v0.2.0 — QA Validation Report
+# S-OS Kernel v0.2.0 — QA Validation Report
 
 **Generated:** 2026-05-22
 **Validated by:** Claude Code (automated static analysis)
