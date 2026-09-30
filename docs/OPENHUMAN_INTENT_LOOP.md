@@ -1,4 +1,4 @@
-# OpenHuman × S/ Intent-Preserving Execution Loop
+# OpenHuman × Intent-Preserving Execution Loop
 
 This document is the canonical binding between the OpenHuman-style agent fleet and the S-OS control plane.
 
