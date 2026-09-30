@@ -1,10 +1,10 @@
-# AGENTS — S/ AgentOS Kernel
+# AGENTS — S-OS Kernel
 
 > Migrated from `CLAUDE.md` for Cursor. Same constraints apply.
 
 ## Identity
 
-**S/ AgentOS Kernel v0.1.3** (target **v0.2.0** hardening) — self-hosted agent OS:
+**S-OS Kernel v0.1.3** (target **v0.2.0** hardening) — self-hosted agent OS:
 
 - n8n — workflows
 - Supabase/Postgres — memory & registry
