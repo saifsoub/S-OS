@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-S/ AgentOS — n8n Workflow Linter
+S-OS — n8n Workflow Linter
 Checks all workflow JSON files for common issues:
 - webhook nodes must use POST
 - no hardcoded operator keys or service-role credentials in code nodes
