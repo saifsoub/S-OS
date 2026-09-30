@@ -9,3 +9,34 @@ test('agent cannot approve own draft',()=>{const x=setup();try{grantRW(x.db,'age
 test('live claims preserve conflicts and provenance',()=>{const x=setup();try{grantRW(x.db,'agent:writer');x.db.registerSource({id:'a',caps:['read'],reliability:.8},'human:owner');x.db.registerSource({id:'b',caps:['read'],reliability:.9},'human:owner');for(const [source,value] of [['a',1],['b',2]])x.db.ingestClaim({source,entity_id:'e:shared',native_id:'n',context_id:'s-master',section:'training',attr:'status',value,ttl_seconds:300},'human:owner');const b=compileContext(x.db,{citation:'@context/s-master#training',max_tokens:2000},'agent:writer');assert.equal(b.freshness.status,'conflict');assert.equal(b.conflicts.length,1);assert.equal(b.provenance.length,2);}finally{x.cleanup();}});
 test('capability grants enforce constraints and max uses',()=>{const x=setup();try{const g=x.db.grant({principal:'agent:p',source:'linkedin',cap:'post:create',constraints:{account:'seif'},ttl_seconds:3600,max_uses:1},'human:owner');const a=x.db.recordAction({source:'linkedin',cap:'post:create',args:{account:'seif'},status:'accepted'},'agent:p');assert.equal(a.grantId,g.id);assert.throws(()=>x.db.recordAction({source:'linkedin',cap:'post:create',args:{account:'seif'}},'agent:p'),/no_active_grant/);}finally{x.cleanup();}});
 test('audit chain verifies after writes',()=>{const x=setup();try{x.db.registerSource({id:'weather'},'human:owner');assert.equal(x.db.verifyAudit().ok,true);}finally{x.cleanup();}});
+test('session state can only be updated by its original principal',()=>{
+  const x=setup();
+  try{
+    const original=x.db.syncSession({session_id:'shared-id',context_refs:['s-master'],state:{task:'original'}},'agent:first');
+    const auditBefore=x.db.verifyAudit();
+    for(const principal of ['agent:second','human:owner']){
+      assert.throws(()=>x.db.syncSession({session_id:'shared-id',state:{task:'hijacked'}},principal),e=>e.statusCode===403 && e.message==='session_owner_required');
+      assert.deepEqual(x.db.getSession('shared-id'),original);
+      assert.deepEqual(x.db.verifyAudit(),auditBefore);
+    }
+    const updated=x.db.syncSession({session_id:'shared-id',context_refs:['other'],state:{task:'updated'}},'agent:first');
+    assert.equal(updated.principal,'agent:first');
+    assert.deepEqual(updated.contextRefs,['other']);
+    assert.deepEqual(updated.state,{task:'updated'});
+    assert.equal(x.db.verifyAudit().entries,auditBefore.entries+1);
+    assert.equal(x.db.verifyAudit().ok,true);
+  }finally{x.cleanup();}
+});
+test('failed session audit rolls back session state',()=>{
+  const x=setup();
+  try{
+    const original=x.db.syncSession({session_id:'rollback-id',state:{task:'original'}},'agent:first');
+    const auditBefore=x.db.verifyAudit();
+    x.db.appendAudit=()=>{throw new Error('audit unavailable');};
+    assert.throws(()=>x.db.syncSession({session_id:'rollback-id',state:{task:'changed'}},'agent:first'),/audit unavailable/);
+    assert.deepEqual(x.db.getSession('rollback-id'),original);
+    assert.deepEqual(x.db.verifyAudit(),auditBefore);
+    assert.throws(()=>x.db.syncSession({session_id:'new-id'},'agent:first'),/audit unavailable/);
+    assert.equal(x.db.getSession('new-id'),null);
+  }finally{x.cleanup();}
+});
