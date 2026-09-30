@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Starter secret scanner for S/ AgentOS.
+"""Starter secret scanner for S-OS.
 
 This script is intentionally conservative. Claude should improve it during the v0.2.0 hardening pass.
 """
