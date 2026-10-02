@@ -1,0 +1,9 @@
+{
+  "name": "alexa-home-github",
+  "version": "0.1.0",
+  "private": true,
+  "main": "lambda/index.js",
+  "dependencies": {
+    "ask-sdk-core": "^2.14.0"
+  }
+}
