@@ -61,6 +61,33 @@ services:
       retries: 5
       start_period: 10s
 
+  mission-executor:
+    build:
+      context: ./execution
+    restart: unless-stopped
+    ports:
+      - "${MISSION_BIND_ADDRESS:-127.0.0.1}:${MISSION_PORT:-8790}:8790"
+    environment:
+      - PORT=8790
+      - HOST=0.0.0.0
+      - MISSION_DATA_DIR=/data
+      - S_AGENTOS_OPERATOR_KEY=${S_AGENTOS_OPERATOR_KEY}
+      - S_PASSPORT_HMAC_KEY=${S_PASSPORT_HMAC_KEY}
+      - OPENMINIS_URL=${OPENMINIS_URL}
+      - OPENMINIS_AUTH_TOKEN=${OPENMINIS_AUTH_TOKEN}
+      - MISSION_MAX_RETRIES=${MISSION_MAX_RETRIES:-2}
+      - MISSION_RETRY_BASE_MS=${MISSION_RETRY_BASE_MS:-250}
+    volumes:
+      - mission_receipts:/data
+    networks:
+      - agentos_network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8790/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -85,6 +112,8 @@ volumes:
   postgres_data:
     driver: local
   context_v2_data:
+    driver: local
+  mission_receipts:
     driver: local
 
 networks:
