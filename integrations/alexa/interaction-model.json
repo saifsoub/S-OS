@@ -1,0 +1,50 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "s home",
+      "intents": [
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "CreateIssueIntent",
+          "slots": [
+            {
+              "name": "title",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "create issue {title}",
+            "open issue {title}"
+          ]
+        },
+        {
+          "name": "RepoStatusIntent",
+          "samples": [
+            "check github",
+            "check repository",
+            "repository status"
+          ]
+        },
+        {
+          "name": "LatestBuildIntent",
+          "samples": [
+            "latest build",
+            "latest workflow",
+            "check latest workflow"
+          ]
+        }
+      ]
+    }
+  }
+}
